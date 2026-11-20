@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Submissions: {{ assignment.title }} - Smart Education{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div>
+        <a href="{% url 'courses:detail' assignment.course.slug %}" class="inline-flex items-center space-x-1 text-sm font-medium text-primary hover:underline mb-2">
+            <i data-lucide="arrow-left" class="h-4 w-4"></i>
+            <span>Back to {{ assignment.course.title }}</span>
+        </a>
+        <h1 class="text-2xl font-bold text-foreground">Submissions: {{ assignment.title }}</h1>
+        <p class="text-sm text-muted-foreground">Review student work, download attachments, and record grades</p>
+    </div>
+
+    <div class="rounded-xl border border-border bg-card overflow-hidden">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-muted/50 border-b border-border text-xs uppercase text-muted-foreground">
+                <tr>
+                    <th class="p-4">Student</th>
+                    <th class="p-4">Submitted On</th>
+                    <th class="p-4">File</th>
+                    <th class="p-4">Grade</th>
+                    <th class="p-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+                {% for sub in submissions %}
+                <tr class="hover:bg-muted/20 transition">
+                    <td class="p-4 font-semibold text-foreground">{{ sub.student.get_full_name|default:sub.student.username }}</td>
+                    <td class="p-4 text-muted-foreground">{{ sub.submitted_on|date:"M d, Y H:i" }}</td>
+                    <td class="p-4">
+                        <a href="{{ sub.file.url }}" download class="text-primary hover:underline inline-flex items-center space-x-1 text-xs">
+                            <i data-lucide="download" class="h-3.5 w-3.5"></i>
+                            <span>Download</span>
+                        </a>
+                    </td>
+                    <td class="p-4">
+                        {% if sub.marks is not None %}
+                        <span class="font-bold text-foreground">{{ sub.marks }}</span> / {{ assignment.max_marks }}
+                        {% else %}
+                        <span class="text-xs text-amber-500 font-medium">Ungraded</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4 text-right">
+                        <a href="{% url 'assessments:grade_submission' sub.id %}" class="px-3 py-1.5 rounded bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition shadow">
+                            Grade
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="p-6 text-center text-muted-foreground">No students have submitted this assignment yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

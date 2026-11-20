@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ course.title }} - Smart Education{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Course Banner Card -->
+    <div class="rounded-xl border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div class="space-y-3 max-w-3xl">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded">
+                        {{ course.category.name|default:"General" }}
+                    </span>
+                    <span class="text-xs text-muted-foreground">Instructor: {{ course.teacher.get_full_name|default:course.teacher.username }}</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">{{ course.title }}</h1>
+                <p class="text-sm text-muted-foreground leading-relaxed">{{ course.description }}</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row lg:flex-col gap-3 min-w-[220px]">
+                {% if user.is_authenticated %}
+                    {% if is_enrolled %}
+                    <div class="p-4 rounded-lg bg-muted border border-border space-y-2">
+                        <div class="flex justify-between text-xs font-semibold">
+                            <span class="text-foreground">Course Completion</span>
+                            <span class="text-primary">{{ progress }}%</span>
+                        </div>
+                        <div class="w-full bg-border rounded-full h-2">
+                            <div class="bg-primary h-2 rounded-full transition-all duration-300" style="width: {{ progress }}%"></div>
+                        </div>
+                    </div>
+                    {% elif user.is_student %}
+                    <form method="post" action="{% url 'courses:enroll' course.slug %}">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full py-3 px-4 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 shadow transition flex items-center justify-center space-x-2">
+                            <i data-lucide="user-plus" class="h-4 w-4"></i>
+                            <span>Enroll in Course</span>
+                        </button>
+                    </form>
+                    {% endif %}
+                {% else %}
+                <a href="{% url 'accounts:login' %}" class="w-full py-3 px-4 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 text-center shadow transition">
+                    Log in to Enroll
+                </a>
+                {% endif %}
+
+                <a href="{% url 'discussions:list' course.slug %}" class="w-full py-2.5 px-4 rounded-md border border-border bg-card text-foreground font-semibold text-sm hover:bg-muted text-center transition flex items-center justify-center space-x-2">
+                    <i data-lucide="message-square" class="h-4 w-4"></i>
+                    <span>Course Forum</span>
+                </a>
+
+                {% if user == course.teacher or user.is_superuser %}
+                <div class="flex items-center gap-2 pt-2">
+                    <a href="{% url 'courses:add_module' course.slug %}" class="flex-1 py-1.5 px-3 rounded-md bg-accent text-accent-foreground text-xs font-semibold text-center hover:bg-accent/80 transition">
+                        + Module
+                    </a>
+                    <a href="{% url 'assessments:create_quiz' course.slug %}" class="flex-1 py-1.5 px-3 rounded-md bg-accent text-accent-foreground text-xs font-semibold text-center hover:bg-accent/80 transition">
+                        + Quiz
+                    </a>
+                    <a href="{% url 'assessments:create_assignment' course.slug %}" class="flex-1 py-1.5 px-3 rounded-md bg-accent text-accent-foreground text-xs font-semibold text-center hover:bg-accent/80 transition">
+                        + Assignment
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Syllabus & Modules Accordion -->
+    <div class="space-y-4">
+        <h2 class="text-xl font-bold text-foreground">Course Syllabus & Curriculum</h2>
+        
+        <div class="space-y-4">
+            {% for module in modules %}
+            <div class="rounded-xl border border-border bg-card overflow-hidden">
+                <div class="p-4 bg-muted/40 border-b border-border flex items-center justify-between">
+                    <h3 class="font-bold text-sm text-foreground flex items-center space-x-2">
+                        <i data-lucide="folder" class="h-4 w-4 text-primary"></i>
+                        <span>Module {{ forloop.counter }}: {{ module.title }}</span>
+                    </h3>
+                    {% if user == course.teacher or user.is_superuser %}
+                    <a href="{% url 'courses:add_lesson' course.slug module.id %}" class="text-xs font-semibold text-primary hover:underline">
+                        + Add Lesson
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="divide-y divide-border">
+                    {% for lesson in module.lessons.all %}
+                    <div class="p-4 flex items-center justify-between hover:bg-muted/20 transition">
+                        <div class="flex items-center space-x-3">
+                            <i data-lucide="play-circle" class="h-4 w-4 text-muted-foreground"></i>
+                            <div>
+                                <h4 class="text-sm font-medium text-foreground">{{ lesson.title }}</h4>
+                                {% if lesson.file %}
+                                <span class="text-[11px] text-muted-foreground flex items-center space-x-1 mt-0.5">
+                                    <i data-lucide="paperclip" class="h-3 w-3"></i>
+                                    <span>Attachment included</span>
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if is_enrolled or user == course.teacher or user.is_superuser %}
+                        <a href="{% url 'courses:lesson' course.slug lesson.id %}" class="px-3 py-1.5 rounded-md bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition">
+                            Open Lesson
+                        </a>
+                        {% else %}
+                        <span class="text-xs text-muted-foreground flex items-center space-x-1">
+                            <i data-lucide="lock" class="h-3 w-3"></i>
+                            <span>Enroll to unlock</span>
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <p class="p-4 text-xs text-muted-foreground italic">No lessons uploaded yet for this module.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-8 text-center rounded-xl border border-border bg-card">
+                <p class="text-sm text-muted-foreground">Syllabus modules are currently being prepared by the instructor.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Quizzes & Assignments Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Quizzes -->
+        <div class="rounded-xl border border-border bg-card p-6 space-y-4">
+            <h3 class="text-base font-bold text-foreground flex items-center space-x-2">
+                <i data-lucide="help-circle" class="h-5 w-5 text-primary"></i>
+                <span>Quizzes & Knowledge Checks</span>
+            </h3>
+            <div class="divide-y divide-border">
+                {% for quiz in quizzes %}
+                <div class="py-3 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-foreground">{{ quiz.title }}</p>
+                        <p class="text-xs text-muted-foreground">{{ quiz.time_limit }} mins limit &bull; Pass: {{ quiz.pass_marks }}%</p>
+                    </div>
+                    {% if is_enrolled or user == course.teacher %}
+                    <a href="{% url 'assessments:take_quiz' quiz.id %}" class="px-3 py-1 rounded bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition">
+                        Start Quiz
+                    </a>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="py-3 text-xs text-muted-foreground">No quizzes posted yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Assignments -->
+        <div class="rounded-xl border border-border bg-card p-6 space-y-4">
+            <h3 class="text-base font-bold text-foreground flex items-center space-x-2">
+                <i data-lucide="file-check" class="h-5 w-5 text-emerald-500"></i>
+                <span>Course Assignments</span>
+            </h3>
+            <div class="divide-y divide-border">
+                {% for assignment in assignments %}
+                <div class="py-3 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-foreground">{{ assignment.title }}</p>
+                        <p class="text-xs text-muted-foreground">Due: {{ assignment.due_date|date:"M d, Y H:i" }} &bull; {{ assignment.max_marks }} marks</p>
+                    </div>
+                    <a href="{% url 'assessments:assignment_detail' assignment.id %}" class="px-3 py-1 rounded border border-border text-foreground text-xs font-semibold hover:bg-muted transition">
+                        View
+                    </a>
+                </div>
+                {% empty %}
+                <p class="py-3 text-xs text-muted-foreground">No active assignments posted.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Course-Linked Innovation Ideas Section -->
+    <div class="rounded-xl border border-border bg-card p-6 sm:p-8 space-y-4 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
+            <div>
+                <h3 class="text-base font-bold text-foreground flex items-center space-x-2">
+                    <i data-lucide="lightbulb" class="h-5 w-5 text-amber-500"></i>
+                    <span>Student Innovation Ideas for this Course</span>
+                </h3>
+                <p class="text-xs text-muted-foreground">Original project solutions formulated by students inspired by this curriculum</p>
+            </div>
+            <a href="{% url 'innovation:create' %}" class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition shadow">
+                <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+                <span>Pitch Idea for this Course</span>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+            {% for idea in linked_ideas %}
+            <div class="p-4 rounded-lg border border-border bg-muted/20 space-y-2 flex flex-col justify-between">
+                <div class="space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded">
+                            {{ idea.category }}
+                        </span>
+                        <span class="text-xs font-semibold text-muted-foreground flex items-center space-x-1">
+                            <i data-lucide="arrow-big-up" class="h-3.5 w-3.5"></i>
+                            <span>{{ idea.total_votes }}</span>
+                        </span>
+                    </div>
+                    <h4 class="text-sm font-bold text-foreground line-clamp-1">
+                        <a href="{% url 'innovation:detail' idea.id %}" class="hover:text-primary transition">{{ idea.title }}</a>
+                    </h4>
+                    <p class="text-xs text-muted-foreground line-clamp-2">{{ idea.problem }}</p>
+                </div>
+                <div class="pt-2 flex items-center justify-between text-[11px] text-muted-foreground border-t border-border">
+                    <span>By {{ idea.author.get_full_name|default:idea.author.username }}</span>
+                    <a href="{% url 'innovation:detail' idea.id %}" class="font-semibold text-primary hover:underline">View &rarr;</a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full py-6 text-center text-xs text-muted-foreground italic">
+                No student project ideas have been linked to this course yet. Be the first to innovate!
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

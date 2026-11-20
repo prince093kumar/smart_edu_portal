@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ thread.title }} - Forum{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <a href="{% url 'discussions:list' course.slug %}" class="inline-flex items-center space-x-1 text-sm font-medium text-primary hover:underline">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        <span>Back to {{ course.title }} Forum</span>
+    </a>
+
+    <!-- Main Thread Topic -->
+    <div class="rounded-xl border border-border bg-card p-6 sm:p-8 shadow-sm space-y-4">
+        <div class="flex items-center justify-between text-xs text-muted-foreground border-b border-border pb-3">
+            <span>By <strong class="text-foreground">{{ thread.author.get_full_name|default:thread.author.username }}</strong></span>
+            <span>{{ thread.created_on|date:"M d, Y H:i" }}</span>
+        </div>
+        <h1 class="text-xl font-bold text-foreground">{{ thread.title }}</h1>
+        <p class="text-sm text-foreground whitespace-pre-line leading-relaxed">{{ thread.content }}</p>
+    </div>
+
+    <!-- Replies -->
+    <div class="space-y-4">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-muted-foreground">Replies ({{ posts.count }})</h3>
+        
+        {% for post in posts %}
+        <div class="rounded-xl border border-border bg-card p-4 space-y-2">
+            <div class="flex items-center justify-between text-xs text-muted-foreground">
+                <span class="font-bold text-foreground">{{ post.author.get_full_name|default:post.author.username }}</span>
+                <span>{{ post.created_on|timesince }} ago</span>
+            </div>
+            <p class="text-sm text-foreground leading-relaxed">{{ post.body }}</p>
+        </div>
+        {% empty %}
+        <p class="text-xs text-muted-foreground italic">No replies yet. Be the first to answer!</p>
+        {% endfor %}
+
+        <!-- Reply Form -->
+        {% if user.is_authenticated %}
+        <div class="rounded-xl border border-border bg-card p-6 shadow-sm space-y-3">
+            <h4 class="text-sm font-bold text-foreground">Post a Reply</h4>
+            <form method="post" class="space-y-3">
+                {% csrf_token %}
+                {{ form.body }}
+                <button type="submit" class="px-4 py-2 rounded-md bg-primary text-primary-foreground font-semibold text-xs hover:bg-primary/90 shadow transition">
+                    Send Reply
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Join Smart Education{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto my-8">
+    <div class="rounded-xl border border-border bg-card p-8 shadow-sm space-y-6">
+        <div class="text-center space-y-1">
+            <h1 class="text-2xl font-bold tracking-tight text-foreground">Create an Account</h1>
+            <p class="text-sm text-muted-foreground">Sign up as a student or instructor</p>
+        </div>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">I am registering as:</label>
+                <div class="grid grid-cols-2 gap-3">
+                    {% for choice in form.role %}
+                    <label class="flex items-center space-x-2 p-3 rounded-md border border-border cursor-pointer hover:bg-muted transition">
+                        {{ choice.tag }}
+                        <span class="text-sm font-medium">{{ choice.choice_label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">First Name</label>
+                    {{ form.first_name }}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Last Name</label>
+                    {{ form.last_name }}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Username</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                <p class="text-xs text-destructive mt-1">{{ form.username.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Email Address</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                <p class="text-xs text-destructive mt-1">{{ form.email.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Password</label>
+                {{ form.password1 }}
+                {% if form.password1.errors %}
+                <p class="text-xs text-destructive mt-1">{{ form.password1.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Confirm Password</label>
+                {{ form.password2 }}
+                {% if form.password2.errors %}
+                <p class="text-xs text-destructive mt-1">{{ form.password2.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            {% if form.non_field_errors %}
+            <div class="p-3 rounded-md bg-destructive/10 text-destructive text-xs">
+                {{ form.non_field_errors.0 }}
+            </div>
+            {% endif %}
+
+            <button type="submit" class="w-full py-2.5 px-4 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 shadow transition">
+                Create Account
+            </button>
+        </form>
+
+        <div class="border-t border-border pt-4 text-center">
+            <p class="text-sm text-muted-foreground">
+                Already have an account? 
+                <a href="{% url 'accounts:login' %}" class="font-medium text-primary hover:underline">Log in</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

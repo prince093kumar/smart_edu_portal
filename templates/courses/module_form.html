@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Module - {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto space-y-6">
+    <div class="rounded-xl border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
+        <div>
+            <h1 class="text-xl font-bold text-foreground">Add Syllabus Module</h1>
+            <p class="text-sm text-muted-foreground">For course: {{ course.title }}</p>
+        </div>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Module Title</label>
+                {{ form.title }}
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Sequence / Order</label>
+                {{ form.order }}
+            </div>
+
+            <div class="flex items-center space-x-3 pt-4">
+                <button type="submit" class="px-5 py-2 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 shadow transition">
+                    Create Module
+                </button>
+                <a href="{% url 'courses:detail' course.slug %}" class="px-4 py-2 rounded-md border border-border text-sm font-semibold hover:bg-muted transition">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Innovation Hub - Smart Education{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header with Action -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <i data-lucide="lightbulb" class="h-6 w-6 text-amber-500"></i>
+                <h1 class="text-2xl font-bold tracking-tight text-foreground">Innovation Hub</h1>
+            </div>
+            <p class="text-sm text-muted-foreground mt-0.5">Where student projects gain community validation and faculty mentorship</p>
+        </div>
+
+        <a href="{% url 'innovation:create' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 shadow transition">
+            <i data-lucide="plus" class="h-4 w-4"></i>
+            <span>Pitch Project Idea</span>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Main Ideas Stream (3 Cols) -->
+        <div class="lg:col-span-3 space-y-6">
+            <!-- Filter Bar -->
+            <div class="p-4 rounded-xl border border-border bg-card">
+                <form method="get" class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-grow">
+                        <i data-lucide="search" class="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground"></i>
+                        <input type="text" name="q" value="{{ query }}" placeholder="Search idea, problem, or solution..." class="w-full pl-9 pr-3 py-2 text-sm rounded-md border border-border bg-background text-foreground focus:ring-2 focus:ring-primary focus:outline-none">
+                    </div>
+
+                    <div class="sm:w-44">
+                        <select name="status" class="w-full px-3 py-2 text-sm rounded-md border border-border bg-background text-foreground focus:ring-2 focus:ring-primary focus:outline-none">
+                            <option value="">All Statuses</option>
+                            {% for st_val, st_lbl in statuses %}
+                            <option value="{{ st_val }}" {% if status_filter == st_val %}selected{% endif %}>{{ st_lbl }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="sm:w-36">
+                        <select name="sort" class="w-full px-3 py-2 text-sm rounded-md border border-border bg-background text-foreground focus:ring-2 focus:ring-primary focus:outline-none">
+                            <option value="votes" {% if sort_by == 'votes' %}selected{% endif %}>Top Upvoted</option>
+                            <option value="recent" {% if sort_by == 'recent' %}selected{% endif %}>Newest</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition">
+                        Filter
+                    </button>
+                </form>
+            </div>
+
+            <!-- Ideas List Cards -->
+            <div class="space-y-4">
+                {% for idea in ideas %}
+                <div class="p-6 rounded-xl border border-border bg-card shadow-sm hover:border-primary/50 transition flex flex-col sm:flex-row gap-4">
+                    <!-- Upvote Counter Box -->
+                    <div class="flex sm:flex-col items-center justify-center p-2 rounded-lg bg-muted border border-border sm:w-16 sm:h-20 flex-shrink-0">
+                        <a href="{% url 'innovation:vote' idea.id %}" class="flex sm:flex-col items-center space-x-1 sm:space-x-0 hover:text-primary transition 
+                            {% if idea.id in user_voted_ids %}text-primary font-bold{% else %}text-muted-foreground{% endif %}">
+                            <i data-lucide="arrow-big-up" class="h-6 w-6"></i>
+                            <span class="text-sm font-bold">{{ idea.total_votes }}</span>
+                        </a>
+                    </div>
+
+                    <!-- Idea Content -->
+                    <div class="flex-grow space-y-2">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary">
+                                    {{ idea.category }}
+                                </span>
+                                {% if idea.course %}
+                                <span class="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                                    {{ idea.course.title|truncatechars:25 }}
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Status Badge -->
+                            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full
+                                {% if idea.status == 'approved' %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400
+                                {% elif idea.status == 'in_progress' %}bg-primary/10 text-primary
+                                {% elif idea.status == 'completed' %}bg-purple-500/10 text-purple-600 dark:text-purple-400
+                                {% elif idea.status == 'under_review' %}bg-amber-500/10 text-amber-600 dark:text-amber-400
+                                {% else %}bg-muted text-muted-foreground{% endif %}">
+                                {{ idea.get_status_display }}
+                            </span>
+                        </div>
+
+                        <h3 class="text-lg font-bold text-foreground">
+                            <a href="{% url 'innovation:detail' idea.id %}" class="hover:text-primary transition">{{ idea.title }}</a>
+                        </h3>
+
+                        <p class="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                            <strong class="text-foreground">Problem:</strong> {{ idea.problem }}
+                        </p>
+
+                        <div class="pt-2 flex items-center justify-between text-xs text-muted-foreground">
+                            <div class="flex items-center space-x-2">
+                                <span>By <strong class="text-foreground">{{ idea.author.get_full_name|default:idea.author.username }}</strong></span>
+                                <span>&bull;</span>
+                                <span>{{ idea.created_on|timesince }} ago</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <i data-lucide="message-square" class="h-3.5 w-3.5"></i>
+                                <span>{{ idea.comments.count }} comments</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-8 text-center rounded-xl border border-border bg-card">
+                    <i data-lucide="lightbulb-off" class="h-10 w-10 text-muted-foreground mx-auto mb-2"></i>
+                    <p class="font-semibold text-foreground">No ideas submitted yet.</p>
+                    <p class="text-xs text-muted-foreground mt-1">Be the first to pitch your innovative solution!</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="flex items-center justify-between border-t border-border pt-6">
+                <div>
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="inline-flex items-center space-x-1 px-4 py-2 text-xs font-semibold rounded-md border border-border bg-card hover:bg-muted transition">
+                        <i data-lucide="chevron-left" class="h-4 w-4"></i>
+                        <span>Previous</span>
+                    </a>
+                    {% endif %}
+                </div>
+                <p class="text-xs text-muted-foreground">
+                    Page <span class="font-bold text-foreground">{{ page_obj.number }}</span> of <span class="font-bold text-foreground">{{ page_obj.paginator.num_pages }}</span>
+                </p>
+                <div>
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" class="inline-flex items-center space-x-1 px-4 py-2 text-xs font-semibold rounded-md border border-border bg-card hover:bg-muted transition">
+                        <span>Next</span>
+                        <i data-lucide="chevron-right" class="h-4 w-4"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar: Leaderboard (1 Col) -->
+        <div class="space-y-6">
+            <div class="rounded-xl border border-border bg-card p-6 shadow-sm space-y-4">
+                <div class="flex items-center space-x-2 border-b border-border pb-3">
+                    <i data-lucide="trophy" class="h-5 w-5 text-amber-500"></i>
+                    <h3 class="text-sm font-bold text-foreground uppercase tracking-wider">Top Ideas Leaderboard</h3>
+                </div>
+
+                <div class="divide-y divide-border">
+                    {% for top_idea in leaderboard %}
+                    <div class="py-3 flex items-start space-x-3">
+                        <span class="text-sm font-extrabold text-primary w-4">#{{ forloop.counter }}</span>
+                        <div class="flex-grow space-y-1">
+                            <a href="{% url 'innovation:detail' top_idea.id %}" class="text-xs font-bold text-foreground hover:text-primary transition line-clamp-1">
+                                {{ top_idea.title }}
+                            </a>
+                            <div class="flex items-center justify-between text-[11px] text-muted-foreground">
+                                <span>{{ top_idea.author.username }}</span>
+                                <span class="font-semibold text-primary">{{ top_idea.vote_count }} votes</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="py-3 text-xs text-muted-foreground">No leaderboard records yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Mentor Info Card -->
+            <div class="p-6 rounded-xl border border-border bg-muted/40 text-xs space-y-2">
+                <p class="font-bold text-foreground uppercase tracking-wider flex items-center space-x-1">
+                    <i data-lucide="check-circle" class="h-4 w-4 text-emerald-500"></i>
+                    <span>Mentor Workflow</span>
+                </p>
+                <p class="text-muted-foreground leading-relaxed">
+                    Ideas progress through <strong>Submitted &rarr; Under Review &rarr; Approved &rarr; In Progress &rarr; Completed</strong>. Teachers provide active guidance.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

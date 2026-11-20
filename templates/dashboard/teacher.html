@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Instructor Dashboard - Smart Education{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-foreground">Instructor Dashboard</h1>
+            <p class="text-sm text-muted-foreground">Overview of courses, enrolled learners, pending grading, and idea reviews</p>
+        </div>
+
+        <a href="{% url 'courses:create' %}" class="inline-flex items-center space-x-2 px-4 py-2 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 shadow transition">
+            <i data-lucide="plus" class="h-4 w-4"></i>
+            <span>Create Course</span>
+        </a>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="p-5 rounded-xl border border-border bg-card space-y-1">
+            <p class="text-xs uppercase font-semibold text-muted-foreground">Authored Courses</p>
+            <p class="text-2xl font-extrabold text-foreground">{{ courses.count }}</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border bg-card space-y-1">
+            <p class="text-xs uppercase font-semibold text-muted-foreground">Active Learners</p>
+            <p class="text-2xl font-extrabold text-primary">{{ total_students }}</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border bg-card space-y-1">
+            <p class="text-xs uppercase font-semibold text-muted-foreground">Pending Grading</p>
+            <p class="text-2xl font-extrabold text-amber-500">{{ pending_submissions.count }}</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border bg-card space-y-1">
+            <p class="text-xs uppercase font-semibold text-muted-foreground">Course Quizzes</p>
+            <p class="text-2xl font-extrabold text-purple-500">{{ total_quizzes }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Submissions to Grade -->
+        <div class="p-6 rounded-xl border border-border bg-card space-y-4 shadow-sm">
+            <h3 class="text-base font-bold text-foreground">Pending Submissions to Grade</h3>
+            <div class="divide-y divide-border">
+                {% for sub in pending_submissions %}
+                <div class="py-3 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-foreground">{{ sub.assignment.title }}</p>
+                        <p class="text-xs text-muted-foreground">Student: {{ sub.student.get_full_name|default:sub.student.username }} &bull; {{ sub.submitted_on|timesince }} ago</p>
+                    </div>
+                    <a href="{% url 'assessments:grade_submission' sub.id %}" class="px-3 py-1 rounded bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition">
+                        Grade
+                    </a>
+                </div>
+                {% empty %}
+                <p class="py-3 text-xs text-muted-foreground">All assignments are graded!</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Ideas Pending Review -->
+        <div class="p-6 rounded-xl border border-border bg-card space-y-4 shadow-sm">
+            <h3 class="text-base font-bold text-foreground">Ideas Awaiting Faculty Mentorship</h3>
+            <div class="divide-y divide-border">
+                {% for idea in pending_ideas %}
+                <div class="py-3 flex items-center justify-between">
+                    <div>
+                        <a href="{% url 'innovation:detail' idea.id %}" class="text-sm font-semibold text-foreground hover:text-primary transition line-clamp-1">
+                            {{ idea.title }}
+                        </a>
+                        <p class="text-xs text-muted-foreground">By {{ idea.author.username }} &bull; {{ idea.course.title }}</p>
+                    </div>
+                    <a href="{% url 'innovation:detail' idea.id %}" class="text-xs font-semibold text-primary hover:underline">
+                        Review &rarr;
+                    </a>
+                </div>
+                {% empty %}
+                <p class="py-3 text-xs text-muted-foreground">No ideas currently waiting for review.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

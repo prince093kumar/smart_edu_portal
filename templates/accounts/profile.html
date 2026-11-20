@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - Smart Education{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <div class="rounded-xl border border-border bg-card p-6 sm:p-8 shadow-sm">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border pb-6">
+            <div class="flex items-center space-x-4">
+                <div class="h-16 w-16 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-2xl">
+                    {{ user.username|make_list|first|upper }}
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-foreground">{{ user.get_full_name|default:user.username }}</h1>
+                    <p class="text-sm text-muted-foreground">{{ user.email }}</p>
+                    <span class="inline-block mt-1 text-xs uppercase tracking-wider px-2 py-0.5 rounded font-semibold bg-primary/10 text-primary">
+                        {{ user.get_role_display }}
+                    </span>
+                </div>
+            </div>
+            <a href="{% url 'accounts:profile_edit' %}" class="inline-flex items-center space-x-1 px-4 py-2 text-sm font-semibold rounded-md border border-border bg-card hover:bg-muted transition">
+                <i data-lucide="edit-3" class="h-4 w-4"></i>
+                <span>Edit Profile</span>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 text-sm">
+            {% if user.is_student %}
+            <div>
+                <p class="text-xs uppercase tracking-wider text-muted-foreground">Institution / College</p>
+                <p class="font-medium text-foreground mt-1">{{ profile.institution|default:"Not specified" }}</p>
+            </div>
+            <div>
+                <p class="text-xs uppercase tracking-wider text-muted-foreground">Class / Grade</p>
+                <p class="font-medium text-foreground mt-1">{{ profile.class_name|default:"Not specified" }}</p>
+            </div>
+            {% elif user.is_teacher %}
+            <div>
+                <p class="text-xs uppercase tracking-wider text-muted-foreground">Department</p>
+                <p class="font-medium text-foreground mt-1">{{ profile.department|default:"Not specified" }}</p>
+            </div>
+            <div>
+                <p class="text-xs uppercase tracking-wider text-muted-foreground">Qualification</p>
+                <p class="font-medium text-foreground mt-1">{{ profile.qualification|default:"Not specified" }}</p>
+            </div>
+            {% endif %}
+
+            <div class="md:col-span-2">
+                <p class="text-xs uppercase tracking-wider text-muted-foreground">Biography</p>
+                <p class="text-foreground mt-1 leading-relaxed">{{ profile.bio|default:"No bio provided yet." }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

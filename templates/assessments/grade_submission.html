@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Grade Submission - Smart Education{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto space-y-6">
+    <div class="rounded-xl border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
+        <div>
+            <h1 class="text-xl font-bold text-foreground">Grade Student Submission</h1>
+            <p class="text-sm text-muted-foreground">
+                Student: <strong>{{ submission.student.get_full_name|default:submission.student.username }}</strong> &bull; Assignment: {{ submission.assignment.title }}
+            </p>
+        </div>
+
+        <div class="p-4 rounded-lg bg-muted border border-border text-sm space-y-2">
+            <p class="text-xs uppercase font-semibold text-muted-foreground">Student Submission File</p>
+            <a href="{{ submission.file.url }}" download class="inline-flex items-center space-x-2 text-primary font-semibold hover:underline">
+                <i data-lucide="download" class="h-4 w-4"></i>
+                <span>Download Student File</span>
+            </a>
+            {% if submission.remarks %}
+            <p class="text-xs text-muted-foreground pt-1"><strong>Student remarks:</strong> {{ submission.remarks }}</p>
+            {% endif %}
+        </div>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                    Marks Awarded (Max: {{ submission.assignment.max_marks }})
+                </label>
+                {{ form.marks }}
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Feedback & Recommendations</label>
+                {{ form.feedback }}
+            </div>
+
+            <div class="flex items-center space-x-3 pt-4 border-t border-border">
+                <button type="submit" class="px-5 py-2.5 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 shadow transition">
+                    Save Grade & Feedback
+                </button>
+                <a href="{% url 'assessments:submissions_list' submission.assignment.id %}" class="px-4 py-2.5 rounded-md border border-border text-sm font-semibold hover:bg-muted transition">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Server Error (500) - Smart Education{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-16 text-center space-y-6">
+    <div class="h-20 w-20 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto text-4xl font-extrabold">
+        500
+    </div>
+    <div class="space-y-2">
+        <h1 class="text-2xl font-bold text-foreground">Internal Server Error</h1>
+        <p class="text-sm text-muted-foreground">Something unexpected happened on our server. Our team has been notified. Please try again shortly.</p>
+    </div>
+    <div class="pt-4">
+        <a href="{% url 'home' %}" class="inline-flex items-center space-x-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition shadow">
+            <i data-lucide="home" class="h-4 w-4"></i>
+            <span>Return Home</span>
+        </a>
+    </div>
+</div>
+{% endblock %}

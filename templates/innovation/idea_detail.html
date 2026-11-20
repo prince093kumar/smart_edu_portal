@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ idea.title }} - Innovation Hub{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <a href="{% url 'innovation:list' %}" class="inline-flex items-center space-x-1 text-sm font-medium text-primary hover:underline">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i>
+        <span>Back to Innovation Hub</span>
+    </a>
+
+    <!-- Idea Detail Card -->
+    <div class="rounded-xl border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
+            <div class="space-y-2">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-primary/10 text-primary">
+                        {{ idea.category }}
+                    </span>
+                    <span class="text-xs text-muted-foreground">Author: {{ idea.author.get_full_name|default:idea.author.username }}</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-foreground">{{ idea.title }}</h1>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <a href="{% url 'innovation:vote' idea.id %}" class="inline-flex items-center space-x-2 px-4 py-2 rounded-md border border-border bg-card hover:bg-muted text-sm font-semibold transition
+                    {% if user_has_voted %}text-primary border-primary/40 bg-primary/10{% endif %}">
+                    <i data-lucide="arrow-big-up" class="h-5 w-5"></i>
+                    <span>{{ idea.total_votes }} Upvote{{ idea.total_votes|pluralize }}</span>
+                </a>
+                <span class="text-xs font-semibold px-3 py-1.5 rounded-full
+                    {% if idea.status == 'approved' %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400
+                    {% elif idea.status == 'in_progress' %}bg-primary/10 text-primary
+                    {% elif idea.status == 'completed' %}bg-purple-500/10 text-purple-600 dark:text-purple-400
+                    {% elif idea.status == 'under_review' %}bg-amber-500/10 text-amber-600 dark:text-amber-400
+                    {% else %}bg-muted text-muted-foreground{% endif %}">
+                    {{ idea.get_status_display }}
+                </span>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">The Problem</h3>
+                <p class="text-sm text-foreground mt-1 leading-relaxed whitespace-pre-line">{{ idea.problem }}</p>
+            </div>
+
+            <div class="border-t border-border pt-4">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Proposed Solution & Implementation</h3>
+                <p class="text-sm text-foreground mt-1 leading-relaxed whitespace-pre-line">{{ idea.solution }}</p>
+            </div>
+
+            {% if idea.file %}
+            <div class="border-t border-border pt-4">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Attached Specification Document</h3>
+                <a href="{{ idea.file.url }}" download class="inline-flex items-center space-x-2 px-4 py-2 rounded-md border border-border bg-muted/40 hover:bg-muted text-sm font-medium transition">
+                    <i data-lucide="download" class="h-4 w-4 text-primary"></i>
+                    <span>Download Project Spec</span>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if idea.mentor_feedback %}
+        <div class="rounded-lg bg-primary/5 border border-primary/20 p-4 space-y-1">
+            <span class="text-xs uppercase font-bold text-primary flex items-center space-x-1">
+                <i data-lucide="user-check" class="h-4 w-4"></i>
+                <span>Mentor Review & Guidance</span>
+            </span>
+            <p class="text-sm text-foreground leading-relaxed">{{ idea.mentor_feedback }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Faculty Mentor Stage Update Form (Teachers Only) -->
+        {% if mentor_form %}
+        <div class="border-t border-border pt-6 space-y-4">
+            <h3 class="text-sm font-bold text-foreground">Faculty Mentor Action Panel</h3>
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Update Idea Stage</label>
+                    {{ mentor_form.status }}
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Mentor Feedback / Directives</label>
+                    {{ mentor_form.mentor_feedback }}
+                </div>
+                <button type="submit" name="update_status" value="1" class="px-4 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition shadow">
+                    Update Mentorship Status
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Peer Comments Section -->
+    <div class="rounded-xl border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
+        <h3 class="text-lg font-bold text-foreground flex items-center space-x-2">
+            <i data-lucide="messages-square" class="h-5 w-5 text-primary"></i>
+            <span>Community Discussion & Collaboration ({{ comments.count }})</span>
+        </h3>
+
+        <!-- Add Comment Form -->
+        <form method="post" class="space-y-3">
+            {% csrf_token %}
+            {{ comment_form.text }}
+            <button type="submit" name="submit_comment" value="1" class="px-4 py-2 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 shadow transition">
+                Post Comment
+            </button>
+        </form>
+
+        <!-- Comments Feed -->
+        <div class="divide-y divide-border pt-4">
+            {% for comment in comments %}
+            <div class="py-4 space-y-1">
+                <div class="flex items-center justify-between text-xs text-muted-foreground">
+                    <span class="font-bold text-foreground">{{ comment.user.get_full_name|default:comment.user.username }}</span>
+                    <span>{{ comment.created_on|timesince }} ago</span>
+                </div>
+                <p class="text-sm text-foreground leading-relaxed">{{ comment.text }}</p>
+            </div>
+            {% empty %}
+            <p class="py-4 text-xs text-muted-foreground italic">No comments yet. Start the conversation!</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

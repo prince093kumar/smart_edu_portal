@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit Course{% else %}Create Course{% endif %} - Smart Education{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <div class="rounded-xl border border-border bg-card p-6 sm:p-8 shadow-sm space-y-6">
+        <div>
+            <h1 class="text-xl font-bold text-foreground">{% if object %}Edit Course{% else %}Create New Course{% endif %}</h1>
+            <p class="text-sm text-muted-foreground">Setup course title, category, description, and publish settings</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Course Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}<p class="text-xs text-destructive mt-1">{{ form.title.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Category</label>
+                {{ form.category }}
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Description & Overview</label>
+                {{ form.description }}
+                {% if form.description.errors %}<p class="text-xs text-destructive mt-1">{{ form.description.errors.0 }}</p>{% endif %}
+            </div>
+
+            <div class="flex items-center space-x-2 pt-2">
+                {{ form.is_published }}
+                <label class="text-sm font-medium text-foreground">Publish course immediately</label>
+            </div>
+
+            <div class="flex items-center space-x-3 pt-4 border-t border-border">
+                <button type="submit" class="px-5 py-2.5 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 shadow transition">
+                    Save Course
+                </button>
+                <a href="{% url 'courses:list' %}" class="px-4 py-2.5 rounded-md border border-border text-sm font-semibold hover:bg-muted transition">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

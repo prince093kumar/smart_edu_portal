@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - Smart Education{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-foreground">Welcome back, {{ user.first_name|default:user.username }}!</h1>
+            <p class="text-sm text-muted-foreground">Track your learning progress, grades, and innovation activity</p>
+        </div>
+
+        <a href="{% url 'innovation:create' %}" class="inline-flex items-center space-x-2 px-4 py-2 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 shadow transition">
+            <i data-lucide="lightbulb" class="h-4 w-4"></i>
+            <span>Pitch Project Idea</span>
+        </a>
+    </div>
+
+    <!-- Quick Stat Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="p-5 rounded-xl border border-border bg-card space-y-1">
+            <p class="text-xs uppercase font-semibold text-muted-foreground">Enrolled Courses</p>
+            <p class="text-2xl font-extrabold text-foreground">{{ enrolled_courses|length }}</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border bg-card space-y-1">
+            <p class="text-xs uppercase font-semibold text-muted-foreground">Completed Courses</p>
+            <p class="text-2xl font-extrabold text-emerald-500">{{ completed_courses_count }}</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border bg-card space-y-1">
+            <p class="text-xs uppercase font-semibold text-muted-foreground">Avg Quiz Score</p>
+            <p class="text-2xl font-extrabold text-primary">{{ avg_quiz_score }}</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border bg-card space-y-1">
+            <p class="text-xs uppercase font-semibold text-muted-foreground">My Project Ideas</p>
+            <p class="text-2xl font-extrabold text-amber-500">{{ my_ideas|length }}</p>
+        </div>
+    </div>
+
+    <!-- Enrolled Courses Progress -->
+    <div class="space-y-4">
+        <h2 class="text-lg font-bold text-foreground">My Active Courses</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for item in enrolled_courses %}
+            <div class="p-5 rounded-xl border border-border bg-card space-y-4 shadow-sm flex flex-col justify-between">
+                <div class="space-y-2">
+                    <span class="text-[11px] font-semibold uppercase text-primary bg-primary/10 px-2 py-0.5 rounded">
+                        {{ item.course.category.name|default:"General" }}
+                    </span>
+                    <h3 class="text-base font-bold text-foreground">{{ item.course.title }}</h3>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-semibold">
+                        <span class="text-muted-foreground">Progress</span>
+                        <span class="text-primary">{{ item.progress }}%</span>
+                    </div>
+                    <div class="w-full bg-border rounded-full h-2">
+                        <div class="bg-primary h-2 rounded-full" style="width: {{ item.progress }}%"></div>
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-border flex items-center justify-between">
+                    <a href="{% url 'courses:detail' item.course.slug %}" class="text-xs font-semibold text-primary hover:underline">
+                        Continue Learning &rarr;
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full p-8 text-center rounded-xl border border-border bg-card">
+                <p class="text-sm text-muted-foreground">You have not enrolled in any courses yet.</p>
+                <a href="{% url 'courses:list' %}" class="inline-block mt-2 text-xs font-semibold text-primary hover:underline">Browse Catalog</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Split Grid: Quizzes & Ideas -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Quizzes -->
+        <div class="p-6 rounded-xl border border-border bg-card space-y-4 shadow-sm">
+            <h3 class="text-base font-bold text-foreground">Recent Quiz Results</h3>
+            <div class="divide-y divide-border">
+                {% for attempt in recent_attempts %}
+                <div class="py-3 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-foreground">{{ attempt.quiz.title }}</p>
+                        <p class="text-xs text-muted-foreground">{{ attempt.quiz.course.title }}</p>
+                    </div>
+                    <span class="text-xs font-bold px-2 py-1 rounded {% if attempt.passed %}bg-emerald-500/10 text-emerald-500{% else %}bg-destructive/10 text-destructive{% endif %}">
+                        {{ attempt.score }} / {{ attempt.total_marks }}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="py-3 text-xs text-muted-foreground">No quiz attempts yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- My Innovation Ideas -->
+        <div class="p-6 rounded-xl border border-border bg-card space-y-4 shadow-sm">
+            <h3 class="text-base font-bold text-foreground">My Innovation Portfolio</h3>
+            <div class="divide-y divide-border">
+                {% for idea in my_ideas %}
+                <div class="py-3 flex items-center justify-between">
+                    <div>
+                        <a href="{% url 'innovation:detail' idea.id %}" class="text-sm font-semibold text-foreground hover:text-primary transition line-clamp-1">
+                            {{ idea.title }}
+                        </a>
+                        <p class="text-xs text-muted-foreground">{{ idea.total_votes }} votes &bull; {{ idea.get_status_display }}</p>
+                    </div>
+                    <span class="text-xs font-bold text-primary">{{ idea.created_on|date:"M d" }}</span>
+                </div>
+                {% empty %}
+                <p class="py-3 text-xs text-muted-foreground">You haven't pitched any ideas yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

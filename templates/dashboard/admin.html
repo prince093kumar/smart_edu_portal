@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}System Dashboard - Smart Education{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div>
+        <h1 class="text-2xl font-bold text-foreground">Platform Administration</h1>
+        <p class="text-sm text-muted-foreground">System-wide metrics, platform health, user breakdowns, and engagement analytics</p>
+    </div>
+
+    <!-- Analytics Numbers -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="p-5 rounded-xl border border-border bg-card space-y-1">
+            <p class="text-xs uppercase font-semibold text-muted-foreground">Total Users</p>
+            <p class="text-3xl font-extrabold text-foreground">{{ total_users }}</p>
+            <p class="text-[11px] text-muted-foreground">{{ total_students }} Students &bull; {{ total_teachers }} Teachers</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border bg-card space-y-1">
+            <p class="text-xs uppercase font-semibold text-muted-foreground">Total Courses</p>
+            <p class="text-3xl font-extrabold text-primary">{{ total_courses }}</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border bg-card space-y-1">
+            <p class="text-xs uppercase font-semibold text-muted-foreground">Total Ideas Pitched</p>
+            <p class="text-3xl font-extrabold text-amber-500">{{ total_ideas }}</p>
+        </div>
+        <div class="p-5 rounded-xl border border-border bg-card space-y-1">
+            <p class="text-xs uppercase font-semibold text-muted-foreground">Total Assessments</p>
+            <p class="text-3xl font-extrabold text-purple-500">{{ total_attempts|add:total_submissions }}</p>
+        </div>
+    </div>
+
+    <!-- Chart.js Visualization Card -->
+    <div class="rounded-xl border border-border bg-card p-6 shadow-sm space-y-4">
+        <h3 class="text-base font-bold text-foreground">Platform Engagement Overview</h3>
+        <div class="h-64">
+            <canvas id="adminStatsChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const ctx = document.getElementById('adminStatsChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Students', 'Teachers', 'Courses', 'Ideas', 'Quiz Attempts', 'Submissions'],
+            datasets: [{
+                label: 'System Totals',
+                data: [{{ total_students }}, {{ total_teachers }}, {{ total_courses }}, {{ total_ideas }}, {{ total_attempts }}, {{ total_submissions }}],
+                backgroundColor: [
+                    '#3b82f6',
+                    '#2563eb',
+                    '#10b981',
+                    '#f59e0b',
+                    '#8b5cf6',
+                    '#ec4899'
+                ],
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

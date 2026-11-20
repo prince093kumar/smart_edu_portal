@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Access Denied (403) - Smart Education{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-16 text-center space-y-6">
+    <div class="h-20 w-20 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto text-4xl font-extrabold">
+        403
+    </div>
+    <div class="space-y-2">
+        <h1 class="text-2xl font-bold text-foreground">Access Restricted</h1>
+        <p class="text-sm text-muted-foreground">You do not have the required role or permissions to access this page. Instructor or administrator privileges may be required.</p>
+    </div>
+    <div class="pt-4 flex justify-center gap-3">
+        <a href="{% url 'dashboard:home' %}" class="inline-flex items-center space-x-2 px-5 py-2.5 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition shadow">
+            <span>My Dashboard</span>
+        </a>
+        <a href="{% url 'home' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-md border border-border text-sm font-semibold hover:bg-muted transition">
+            <span>Home</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
