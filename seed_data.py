@@ -42,14 +42,17 @@ teacher_user, _ = User.objects.get_or_create(
 )
 teacher_user.set_password('teacher123')
 teacher_user.save()
-TeacherProfile.objects.get_or_create(
+teacher_profile, _ = TeacherProfile.objects.get_or_create(
     user=teacher_user,
     defaults={
         'department': 'Computer Science & AI',
         'qualification': 'Ph.D. in Machine Learning, MIT',
-        'bio': 'Passionate about guiding students to convert academic research into impactful real-world innovations.'
+        'bio': 'Passionate about guiding students to convert academic research into impactful real-world innovations.',
+        'is_verified': True,
     }
 )
+teacher_profile.is_verified = True
+teacher_profile.save()
 
 student1, _ = User.objects.get_or_create(
     username='alex_coder',
@@ -104,8 +107,12 @@ course1, _ = Course.objects.get_or_create(
         'category': cat_web,
         'description': 'Master the Model-Template-View architecture, responsive design with Tailwind CSS, relational databases, REST APIs, and automated assessment workflows.',
         'is_published': True,
+        'is_approved': True,
     }
 )
+course1.is_approved = True
+course1.is_published = True
+course1.save()
 
 # Modules & Lessons for Course 1
 m1, _ = Module.objects.get_or_create(course=course1, title='Module 1: Django Architecture & Setup', order=1)

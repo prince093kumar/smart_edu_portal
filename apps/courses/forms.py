@@ -11,10 +11,20 @@ class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = ['title', 'description', 'category', 'thumbnail', 'is_published']
+        labels = {
+            'title': 'Course Title',
+            'description': 'Description & Overview',
+            'category': 'Category',
+            'thumbnail': 'Course Banner / Photo',
+            'is_published': 'Publish course immediately',
+        }
         widgets = {
-            'title': forms.TextInput(attrs={'class': TW_INPUT}),
-            'description': forms.Textarea(attrs={'class': TW_INPUT, 'rows': 4}),
+            'title': forms.TextInput(attrs={'class': TW_INPUT, 'placeholder': 'e.g. Full-Stack Web Engineering with Django'}),
+            'description': forms.Textarea(attrs={'class': TW_INPUT, 'rows': 4, 'placeholder': 'Provide an overview of the curriculum, goals, and outcomes...'}),
             'category': forms.Select(attrs={'class': TW_INPUT}),
+            'thumbnail': forms.FileInput(attrs={
+                'class': 'w-full text-sm text-[var(--foreground)] file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-[var(--primary)] file:text-[var(--primary-foreground)] hover:file:opacity-90 cursor-pointer border border-[var(--border)] rounded-md bg-[var(--card)] p-1.5'
+            }),
             'is_published': forms.CheckboxInput(attrs={'class': 'h-4 w-4 rounded text-[var(--primary)] focus:ring-[var(--primary)]'}),
         }
 

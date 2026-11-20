@@ -45,9 +45,15 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for course in courses %}
         <div class="rounded-xl border border-border bg-card overflow-hidden shadow-sm flex flex-col hover:border-primary/50 transition">
+            {% if course.thumbnail %}
+            <div class="h-40 w-full overflow-hidden border-b border-border bg-muted">
+                <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" class="h-full w-full object-cover">
+            </div>
+            {% else %}
             <div class="h-40 bg-gradient-to-r from-primary/10 to-accent/30 flex items-center justify-center border-b border-border p-4">
                 <i data-lucide="book-marked" class="h-12 w-12 text-primary/70"></i>
             </div>
+            {% endif %}
             <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">

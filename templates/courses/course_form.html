@@ -29,6 +29,22 @@
                 {% if form.description.errors %}<p class="text-xs text-destructive mt-1">{{ form.description.errors.0 }}</p>{% endif %}
             </div>
 
+            <div>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Course Banner / Photo</label>
+                {{ form.thumbnail }}
+                {% if form.thumbnail.errors %}<p class="text-xs text-destructive mt-1">{{ form.thumbnail.errors.0 }}</p>{% endif %}
+                {% if object.thumbnail %}
+                <div class="mt-2 flex items-center space-x-3 text-xs text-muted-foreground p-2 rounded-lg border border-border bg-muted/40">
+                    <img src="{{ object.thumbnail.url }}" alt="Current course banner" class="h-14 w-24 object-cover rounded border border-border">
+                    <div>
+                        <p class="font-medium text-foreground">Current Course Banner</p>
+                        <p class="text-[11px] text-muted-foreground">Select a new file above to replace this banner photo.</p>
+                    </div>
+                </div>
+                {% endif %}
+                <p class="text-xs text-muted-foreground mt-1">Recommended size: 1200×630 pixels (16:9 ratio). Supported formats: JPG, PNG, WebP (Max 10MB).</p>
+            </div>
+
             <div class="flex items-center space-x-2 pt-2">
                 {{ form.is_published }}
                 <label class="text-sm font-medium text-foreground">Publish course immediately</label>

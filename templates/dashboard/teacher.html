@@ -4,16 +4,52 @@
 
 {% block content %}
 <div class="space-y-8">
+    <!-- Verification Alert Banner if Not Verified -->
+    {% if not is_verified %}
+    <div class="p-5 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-start space-x-3.5 shadow-sm">
+        <i data-lucide="shield-alert" class="h-6 w-6 text-amber-500 mt-0.5 flex-shrink-0"></i>
+        <div class="space-y-1.5 flex-grow">
+            <div class="flex items-center space-x-2">
+                <h4 class="text-sm font-bold text-foreground">Teacher Account Verification Pending</h4>
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-600 dark:text-amber-400">Action Required by Admin</span>
+            </div>
+            <p class="text-xs text-muted-foreground leading-relaxed">
+                Your instructor profile is currently awaiting administrator review and verification. While in pending status, you can explore the platform and prepare course materials. You will be authorized to create and publish new courses once an administrator verifies your status.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-foreground">Instructor Dashboard</h1>
+        <div class="space-y-1">
+            <div class="flex items-center space-x-2">
+                <h1 class="text-2xl font-bold text-foreground">Instructor Dashboard</h1>
+                {% if is_verified %}
+                <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    <i data-lucide="shield-check" class="h-3.5 w-3.5"></i>
+                    <span>Verified Instructor</span>
+                </span>
+                {% else %}
+                <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                    <i data-lucide="clock" class="h-3.5 w-3.5"></i>
+                    <span>Pending Verification</span>
+                </span>
+                {% endif %}
+            </div>
             <p class="text-sm text-muted-foreground">Overview of courses, enrolled learners, pending grading, and idea reviews</p>
         </div>
 
+        {% if is_verified %}
         <a href="{% url 'courses:create' %}" class="inline-flex items-center space-x-2 px-4 py-2 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 shadow transition">
             <i data-lucide="plus" class="h-4 w-4"></i>
             <span>Create Course</span>
         </a>
+        {% else %}
+        <button disabled title="Account verification required before creating courses" class="inline-flex items-center space-x-2 px-4 py-2 rounded-md bg-muted text-muted-foreground text-sm font-semibold border border-border cursor-not-allowed opacity-75">
+            <i data-lucide="lock" class="h-4 w-4"></i>
+            <span>Create Course (Verification Pending)</span>
+        </button>
+        {% endif %}
     </div>
 
     <!-- Metric Cards -->

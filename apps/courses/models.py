@@ -34,6 +34,19 @@ class Course(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='courses')
     thumbnail = models.ImageField(upload_to='course_thumbnails/', blank=True, null=True)
     is_published = models.BooleanField(default=False)
+    is_approved = models.BooleanField(
+        default=False,
+        verbose_name='Approved by Admin',
+        help_text='Admin approval is required for this course to be visible and accessible to students.'
+    )
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_courses',
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
 
@@ -53,6 +66,11 @@ class Course(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def is_public(self):
+        """Course is public to students if and only if approved by admin and published."""
+        return self.is_approved and self.is_published
 
     @property
     def total_lessons(self):

@@ -4,9 +4,17 @@
 
 {% block content %}
 <div class="space-y-8">
-    <div>
-        <h1 class="text-2xl font-bold text-foreground">Platform Administration</h1>
-        <p class="text-sm text-muted-foreground">System-wide metrics, platform health, user breakdowns, and engagement analytics</p>
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-foreground">Platform Administration</h1>
+            <p class="text-sm text-muted-foreground">System-wide metrics, teacher verification queue, and course approval management</p>
+        </div>
+        <div class="flex items-center space-x-2">
+            <a href="/admin/" target="_blank" class="inline-flex items-center space-x-2 px-3.5 py-2 rounded-md border border-border bg-card text-foreground font-semibold text-xs hover:bg-muted transition">
+                <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
+                <span>Open Django Admin</span>
+            </a>
+        </div>
     </div>
 
     <!-- Analytics Numbers -->
@@ -19,14 +27,161 @@
         <div class="p-5 rounded-xl border border-border bg-card space-y-1">
             <p class="text-xs uppercase font-semibold text-muted-foreground">Total Courses</p>
             <p class="text-3xl font-extrabold text-primary">{{ total_courses }}</p>
+            <p class="text-[11px] text-muted-foreground">{{ pending_courses.count }} Pending Approval</p>
         </div>
         <div class="p-5 rounded-xl border border-border bg-card space-y-1">
-            <p class="text-xs uppercase font-semibold text-muted-foreground">Total Ideas Pitched</p>
-            <p class="text-3xl font-extrabold text-amber-500">{{ total_ideas }}</p>
+            <p class="text-xs uppercase font-semibold text-muted-foreground">Pending Teachers</p>
+            <p class="text-3xl font-extrabold text-amber-500">{{ pending_teachers.count }}</p>
+            <p class="text-[11px] text-muted-foreground">Awaiting Verification</p>
         </div>
         <div class="p-5 rounded-xl border border-border bg-card space-y-1">
             <p class="text-xs uppercase font-semibold text-muted-foreground">Total Assessments</p>
             <p class="text-3xl font-extrabold text-purple-500">{{ total_attempts|add:total_submissions }}</p>
+            <p class="text-[11px] text-muted-foreground">{{ total_ideas }} Ideas Pitched</p>
+        </div>
+    </div>
+
+    <!-- 1. Teacher Verification Queue -->
+    <div class="rounded-xl border border-border bg-card overflow-hidden shadow-sm space-y-0">
+        <div class="p-5 bg-muted/40 border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div class="flex items-center space-x-2">
+                <i data-lucide="user-check" class="h-5 w-5 text-primary"></i>
+                <h2 class="text-base font-bold text-foreground">Teacher Account Verification Queue</h2>
+                {% if pending_teachers %}
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                    {{ pending_teachers.count }} Pending
+                </span>
+                {% endif %}
+            </div>
+            <p class="text-xs text-muted-foreground">Instructors must be verified before they can create courses</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-muted/20 border-b border-border text-xs uppercase text-muted-foreground">
+                    <tr>
+                        <th class="p-4">Teacher / Name</th>
+                        <th class="p-4">Email</th>
+                        <th class="p-4">Department</th>
+                        <th class="p-4">Qualification</th>
+                        <th class="p-4">Joined</th>
+                        <th class="p-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    {% for teacher in pending_teachers %}
+                    <tr class="hover:bg-muted/20 transition">
+                        <td class="p-4 font-semibold text-foreground">
+                            <div class="flex items-center space-x-2">
+                                <span class="h-8 w-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs">
+                                    {{ teacher.username|make_list|first|upper }}
+                                </span>
+                                <div>
+                                    <p class="text-sm font-bold text-foreground">{{ teacher.get_full_name|default:teacher.username }}</p>
+                                    <p class="text-xs text-muted-foreground">@{{ teacher.username }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4 text-muted-foreground">{{ teacher.email }}</td>
+                        <td class="p-4 text-muted-foreground">{{ teacher.teacher_profile.department|default:"Not specified" }}</td>
+                        <td class="p-4 text-muted-foreground">{{ teacher.teacher_profile.qualification|default:"Not specified" }}</td>
+                        <td class="p-4 text-muted-foreground text-xs">{{ teacher.date_joined|date:"M d, Y" }}</td>
+                        <td class="p-4 text-right">
+                            <form method="post" action="{% url 'dashboard:verify_teacher' teacher.id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-md bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-sm transition">
+                                    <i data-lucide="check-circle" class="h-3.5 w-3.5"></i>
+                                    <span>Verify Teacher</span>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-6 text-center text-muted-foreground text-xs">
+                            <i data-lucide="check-circle-2" class="h-6 w-6 text-emerald-500 mx-auto mb-1"></i>
+                            <span class="font-medium text-foreground">All teachers are currently verified!</span>
+                            <span class="block text-[11px] text-muted-foreground mt-0.5">New teacher registrations will appear here for your approval.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 2. Course Approval Queue -->
+    <div class="rounded-xl border border-border bg-card overflow-hidden shadow-sm space-y-0">
+        <div class="p-5 bg-muted/40 border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <div class="flex items-center space-x-2">
+                <i data-lucide="book-check" class="h-5 w-5 text-primary"></i>
+                <h2 class="text-base font-bold text-foreground">Courses Awaiting Public Approval</h2>
+                {% if pending_courses %}
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                    {{ pending_courses.count }} Pending Approval
+                </span>
+                {% endif %}
+            </div>
+            <p class="text-xs text-muted-foreground">Only approved courses are visible and accessible to students</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-muted/20 border-b border-border text-xs uppercase text-muted-foreground">
+                    <tr>
+                        <th class="p-4">Course</th>
+                        <th class="p-4">Instructor</th>
+                        <th class="p-4">Category</th>
+                        <th class="p-4">Lessons</th>
+                        <th class="p-4">Submitted</th>
+                        <th class="p-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    {% for course in pending_courses %}
+                    <tr class="hover:bg-muted/20 transition">
+                        <td class="p-4 font-semibold text-foreground">
+                            <div class="flex items-center space-x-3">
+                                {% if course.thumbnail %}
+                                <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" class="h-9 w-14 object-cover rounded border border-border">
+                                {% endif %}
+                                <div>
+                                    <a href="{% url 'courses:detail' course.slug %}" class="text-sm font-bold text-foreground hover:text-primary transition">
+                                        {{ course.title }}
+                                    </a>
+                                    <p class="text-xs text-muted-foreground line-clamp-1">{{ course.description|truncatewords:8 }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4 text-muted-foreground">{{ course.teacher.get_full_name|default:course.teacher.username }}</td>
+                        <td class="p-4 text-muted-foreground">{{ course.category.name|default:"General" }}</td>
+                        <td class="p-4 text-muted-foreground">{{ course.total_lessons }}</td>
+                        <td class="p-4 text-muted-foreground text-xs">{{ course.created_on|date:"M d, Y" }}</td>
+                        <td class="p-4 text-right space-x-2">
+                            <a href="{% url 'courses:detail' course.slug %}" class="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-md border border-border text-xs font-semibold hover:bg-muted transition">
+                                <i data-lucide="eye" class="h-3.5 w-3.5"></i>
+                                <span>Preview</span>
+                            </a>
+                            <form method="post" action="{% url 'dashboard:approve_course' course.id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="inline-flex items-center space-x-1 px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold text-xs hover:bg-primary/90 shadow-sm transition">
+                                    <i data-lucide="check" class="h-3.5 w-3.5"></i>
+                                    <span>Approve to Public</span>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-6 text-center text-muted-foreground text-xs">
+                            <i data-lucide="check-circle-2" class="h-6 w-6 text-emerald-500 mx-auto mb-1"></i>
+                            <span class="font-medium text-foreground">All courses are reviewed and approved!</span>
+                            <span class="block text-[11px] text-muted-foreground mt-0.5">When teachers create new courses, they will appear here for public release approval.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 

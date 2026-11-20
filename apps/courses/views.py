@@ -4,13 +4,13 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
 from django.core.paginator import Paginator
-from apps.accounts.mixins import TeacherRequiredMixin
+from apps.accounts.mixins import TeacherRequiredMixin, VerifiedTeacherRequiredMixin
 from django.views.generic import CreateView, UpdateView
 from .models import Course, Category, Module, Lesson, Enrollment, LessonProgress
 from .forms import CourseForm, ModuleForm, LessonForm
 
 def course_list(request):
-    courses = Course.objects.filter(is_published=True)
+    courses = Course.objects.filter(is_approved=True, is_published=True)
     categories = Category.objects.all()
     query = request.GET.get('q', '')
     category_slug = request.GET.get('category', '')
@@ -38,6 +38,17 @@ def course_list(request):
 
 def course_detail(request, slug):
     course = get_object_or_404(Course, slug=slug)
+
+    # Unapproved or unpublished courses are restricted to instructor/author and superuser
+    if not (course.is_approved and course.is_published):
+        can_preview = (
+            request.user.is_authenticated and 
+            (request.user == course.teacher or request.user.is_superuser)
+        )
+        if not can_preview:
+            messages.warning(request, 'This course is pending administrator approval before public release.')
+            return redirect('courses:list')
+
     is_enrolled = False
     progress = 0
 
@@ -67,7 +78,7 @@ def course_detail(request, slug):
 
 @login_required
 def enroll(request, slug):
-    course = get_object_or_404(Course, slug=slug, is_published=True)
+    course = get_object_or_404(Course, slug=slug, is_approved=True, is_published=True)
     if request.user.is_student:
         enrollment, created = Enrollment.objects.get_or_create(student=request.user, course=course)
         if created:
@@ -125,14 +136,22 @@ def mark_complete(request, slug, lesson_id):
 
 
 # Teacher course management
-class CourseCreateView(TeacherRequiredMixin, CreateView):
+class CourseCreateView(VerifiedTeacherRequiredMixin, CreateView):
     model = Course
     form_class = CourseForm
     template_name = 'courses/course_form.html'
 
     def form_valid(self, form):
         form.instance.teacher = self.request.user
-        messages.success(self.request, 'Course draft created successfully!')
+        if self.request.user.is_superuser:
+            form.instance.is_approved = True
+            messages.success(self.request, 'Course created and approved by administrator!')
+        else:
+            form.instance.is_approved = False
+            messages.info(
+                self.request,
+                'Course draft created! It is now pending administrator review and approval before becoming visible to students.'
+            )
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -145,6 +164,8 @@ class CourseUpdateView(TeacherRequiredMixin, UpdateView):
     template_name = 'courses/course_form.html'
 
     def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Course.objects.all()
         return Course.objects.filter(teacher=self.request.user)
 
     def form_valid(self, form):
@@ -158,6 +179,9 @@ class CourseUpdateView(TeacherRequiredMixin, UpdateView):
 @login_required
 def add_module(request, slug):
     course = get_object_or_404(Course, slug=slug, teacher=request.user)
+    if not request.user.is_verified_teacher:
+        messages.warning(request, 'Your instructor account is pending administrator verification. You cannot modify curriculum.')
+        return redirect('courses:teacher_courses')
     if request.method == 'POST':
         form = ModuleForm(request.POST)
         if form.is_valid():
@@ -175,6 +199,9 @@ def add_module(request, slug):
 def add_lesson(request, slug, module_id):
     course = get_object_or_404(Course, slug=slug, teacher=request.user)
     module = get_object_or_404(Module, id=module_id, course=course)
+    if not request.user.is_verified_teacher:
+        messages.warning(request, 'Your instructor account is pending administrator verification. You cannot modify curriculum.')
+        return redirect('courses:teacher_courses')
     if request.method == 'POST':
         form = LessonForm(request.POST, request.FILES)
         if form.is_valid():
@@ -194,4 +221,8 @@ def teacher_courses(request):
         messages.error(request, 'Only teachers can access instructor view.')
         return redirect('dashboard:home')
     courses = Course.objects.filter(teacher=request.user)
-    return render(request, 'courses/teacher_courses.html', {'courses': courses})
+    is_verified = request.user.is_verified_teacher
+    return render(request, 'courses/teacher_courses.html', {
+        'courses': courses,
+        'is_verified': is_verified,
+    })

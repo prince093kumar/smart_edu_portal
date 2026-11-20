@@ -4,39 +4,100 @@
 
 {% block content %}
 <div class="space-y-6">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-foreground">Instructor Studio</h1>
-            <p class="text-sm text-muted-foreground">Manage your authored courses, curriculum, quizzes, and grading</p>
+    <!-- Verification Alert Banner if Not Verified -->
+    {% if not is_verified %}
+    <div class="p-5 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-start space-x-3.5 shadow-sm">
+        <i data-lucide="shield-alert" class="h-6 w-6 text-amber-500 mt-0.5 flex-shrink-0"></i>
+        <div class="space-y-1.5 flex-grow">
+            <div class="flex items-center space-x-2">
+                <h4 class="text-sm font-bold text-foreground">Teacher Account Verification Pending</h4>
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-600 dark:text-amber-400">Action Required by Admin</span>
+            </div>
+            <p class="text-xs text-muted-foreground leading-relaxed">
+                Your instructor account is awaiting administrator verification. Once an administrator verifies your status, you will be authorized to create new courses. Any existing courses will be submitted to the administrator for public approval before students can enroll.
+            </p>
         </div>
+    </div>
+    {% endif %}
+
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <h1 class="text-2xl font-bold text-foreground">Instructor Studio</h1>
+                {% if is_verified %}
+                <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    <i data-lucide="shield-check" class="h-3.5 w-3.5"></i>
+                    <span>Verified Instructor</span>
+                </span>
+                {% else %}
+                <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                    <i data-lucide="clock" class="h-3.5 w-3.5"></i>
+                    <span>Verification Pending</span>
+                </span>
+                {% endif %}
+            </div>
+            <p class="text-sm text-muted-foreground">Manage your authored courses, curriculum, quizzes, and public approval status</p>
+        </div>
+
+        {% if is_verified %}
         <a href="{% url 'courses:create' %}" class="inline-flex items-center space-x-2 px-4 py-2 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 shadow transition">
             <i data-lucide="plus" class="h-4 w-4"></i>
             <span>New Course</span>
         </a>
+        {% else %}
+        <button disabled title="Administrator verification required to create courses" class="inline-flex items-center space-x-2 px-4 py-2 rounded-md bg-muted text-muted-foreground text-sm font-semibold border border-border cursor-not-allowed opacity-75">
+            <i data-lucide="lock" class="h-4 w-4"></i>
+            <span>New Course (Verification Pending)</span>
+        </button>
+        {% endif %}
     </div>
 
-    <div class="rounded-xl border border-border bg-card overflow-hidden">
+    <div class="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
         <table class="w-full text-left text-sm">
             <thead class="bg-muted/50 border-b border-border text-xs uppercase text-muted-foreground">
                 <tr>
                     <th class="p-4">Title</th>
                     <th class="p-4">Category</th>
                     <th class="p-4">Lessons</th>
-                    <th class="p-4">Status</th>
+                    <th class="p-4">Admin Approval</th>
+                    <th class="p-4">Visibility</th>
                     <th class="p-4 text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-border">
                 {% for course in courses %}
                 <tr class="hover:bg-muted/20 transition">
-                    <td class="p-4 font-semibold text-foreground">{{ course.title }}</td>
+                    <td class="p-4 font-semibold text-foreground">
+                        <div class="flex items-center space-x-3">
+                            {% if course.thumbnail %}
+                            <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" class="h-9 w-14 object-cover rounded border border-border">
+                            {% endif %}
+                            <div>
+                                <p class="text-sm font-bold text-foreground">{{ course.title }}</p>
+                                <p class="text-xs text-muted-foreground">Created {{ course.created_on|date:"M d, Y" }}</p>
+                            </div>
+                        </div>
+                    </td>
                     <td class="p-4 text-muted-foreground">{{ course.category.name|default:"General" }}</td>
                     <td class="p-4 text-muted-foreground">{{ course.total_lessons }}</td>
                     <td class="p-4">
-                        {% if course.is_published %}
-                        <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">Published</span>
+                        {% if course.is_approved %}
+                        <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            <i data-lucide="check" class="h-3 w-3"></i>
+                            <span>Approved for Public</span>
+                        </span>
                         {% else %}
-                        <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400">Draft</span>
+                        <span class="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                            <i data-lucide="clock" class="h-3 w-3"></i>
+                            <span>Pending Admin Approval</span>
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4">
+                        {% if course.is_published %}
+                        <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400">Published</span>
+                        {% else %}
+                        <span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-muted text-muted-foreground">Draft</span>
                         {% endif %}
                     </td>
                     <td class="p-4 text-right space-x-2">
@@ -46,7 +107,12 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="p-6 text-center text-muted-foreground">You have not created any courses yet.</td>
+                    <td colspan="6" class="p-8 text-center text-muted-foreground">
+                        <p class="font-semibold text-foreground">You have not created any courses yet.</p>
+                        {% if not is_verified %}
+                        <p class="text-xs text-muted-foreground mt-1">Once your teacher profile is verified by an admin, you can create your first course!</p>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -16,10 +16,14 @@ def register(request):
             user = form.save()
             if user.role == 'student':
                 StudentProfile.objects.create(user=user)
+                messages.success(request, f'Welcome to Smart Education, {user.first_name or user.username}!')
             elif user.role == 'teacher':
-                TeacherProfile.objects.create(user=user)
+                TeacherProfile.objects.create(user=user, is_verified=False)
+                messages.info(
+                    request,
+                    f'Welcome, {user.first_name or user.username}! Your instructor account has been created. An administrator must verify your account before you can create courses.'
+                )
             login(request, user)
-            messages.success(request, f'Welcome to Smart Education, {user.first_name or user.username}!')
             return redirect('dashboard:home')
     else:
         form = UserRegistrationForm()
